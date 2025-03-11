@@ -14,6 +14,4 @@ pipeline {
     }
 }
 
-
-
-
+// dsa   sđá
