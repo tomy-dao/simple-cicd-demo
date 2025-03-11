@@ -1,16 +1,58 @@
-import org.jenkinsci.plugins.github.checks.GitHubChecksStatus
-
 pipeline {
-    agent any
-    stages {
-        stage('Build') {
-            steps {
-                script {
-                    def status = GitHubChecksStatus.IN_PROGRESS
-                    githubChecks status: status, name: 'Build'
+  agent {
+    label 'built-in'
+  }
+  
+  options {
+    skipDefaultCheckout()
+  }
+
+  stages {
+    stage('Build') {
+      parallel {
+        stage('Windows') {
+          stages {
+            stage('msvc2017') {
+              steps {
+                withChecks('MSVC 2017') {
+                  build job: 'msvc2017'
                 }
-                sh 'echo "Building..."'
+              }
             }
+            stage('msvc2022') {
+              when { 
+                branch 'main' 
+              }
+              steps {
+                withChecks('MSVC 2022') {
+                  build job: 'msvc2022'
+                }
+              }
+            }
+          }
         }
+        stage('Linux') {
+          stages {
+            stage('clang') {
+              when { 
+                branch 'dev' 
+              }
+              steps {
+                withChecks('clang') {
+                  build job: 'clang'
+                }
+              }
+            }
+            stage('gcc') {
+              steps {
+                withChecks('gcc') {
+                  build job: 'gcc'
+                }
+              }
+            }
+          }
+        }
+      }
     }
+  }
 }
