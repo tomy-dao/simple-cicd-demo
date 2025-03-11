@@ -1,25 +1,16 @@
+import org.jenkinsci.plugins.github.checks.GitHubChecksStatus
+
 pipeline {
     agent any
     stages {
         stage('Build') {
             steps {
-                echo 'Building...'
+                script {
+                    def status = GitHubChecksStatus.IN_PROGRESS
+                    githubChecks status: status, name: 'Build'
+                }
+                sh 'echo "Building..."'
             }
-        }
-        stage('Test') {
-            steps {
-                echo 'Testing...'
-            }
-        }
-    }
-    post {
-        success {
-            githubCheck status: 'SUCCESS', name: 'Build & Test'
-        }
-        failure {
-            githubCheck status: 'FAILURE', name: 'Build & Test'
         }
     }
 }
-
-
