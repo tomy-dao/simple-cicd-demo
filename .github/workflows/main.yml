@@ -10,7 +10,7 @@ jobs:
     steps:
       - name: Gửi request trigger Jenkins
         run: |
-          JENKINS_URL="http://52.74.169.53:8080/"
+          JENKINS_URL="http://52.74.169.53:8080"
           JOB_NAME="trigger github"
           JENKINS_USER=""
           JENKINS_API_TOKEN=""
