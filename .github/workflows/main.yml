@@ -1,0 +1,47 @@
+name: Trigger Jenkins Job
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  trigger-jenkins:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Gửi request trigger Jenkins
+        run: |
+          JENKINS_URL="http://52.74.169.53:8080/"
+          JOB_NAME="trigger github"
+          JENKINS_USER=""
+          JENKINS_API_TOKEN=""
+
+          # Gửi request để trigger Jenkins job
+          RESPONSE=$(curl -s -w "%{http_code}" -o output.txt -X POST "$JENKINS_URL/job/$JOB_NAME/build" \
+            --user "$JENKINS_USER:$JENKINS_API_TOKEN")
+
+          echo "Response code: $RESPONSE"
+
+      - name: Lấy kết quả từ Jenkins
+        run: |
+          JENKINS_URL="${{ secrets.JENKINS_URL }}"
+          JOB_NAME="my-jenkins-job"
+          JENKINS_USER="${{ secrets.JENKINS_USER }}"
+          JENKINS_API_TOKEN="${{ secrets.JENKINS_API_TOKEN }}"
+
+          # Lấy ID của build mới nhất
+          BUILD_NUMBER=$(curl -s "$JENKINS_URL/job/$JOB_NAME/lastBuild/buildNumber" \
+            --user "$JENKINS_USER:$JENKINS_API_TOKEN")
+
+          echo "Build Number: $BUILD_NUMBER"
+
+          # Lấy kết quả của build
+          BUILD_STATUS=$(curl -s "$JENKINS_URL/job/$JOB_NAME/$BUILD_NUMBER/api/json" \
+            --user "$JENKINS_USER:$JENKINS_API_TOKEN" | jq -r .result)
+
+          echo "Build Status: $BUILD_STATUS"
+
+          # Nếu build thất bại, fail GitHub Action
+          if [[ "$BUILD_STATUS" != "SUCCESS" ]]; then
+            echo "Jenkins build failed!"
+            exit 1
+          fi
